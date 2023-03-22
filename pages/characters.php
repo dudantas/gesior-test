@@ -75,7 +75,7 @@ if(!empty($name))
 		$main_content .= '</TABLE>';
 
 		$main_content .= '<table width=100%><tr>';
-		$itemsList = $player->getItems();
+		$item = $player->getItems()->getItemInventory($pid);
 		$main_content .= '<td align=center><table with=100% style="border: solid 1px #888888;" CELLSPACING="1"><TR>';		
 		$list = array('2','1','3','6','4','5','9','7','10','8');
 		foreach ($list as $number_of_items_showed => $slot)
@@ -84,13 +84,14 @@ if(!empty($name))
 			{
 				$main_content .= '<td style="background-color: '.$config['site']['darkborder'].'; text-align: center;">Soul:<br/>'. $player->getSoul() .'</td>';
 			}
-			if($itemsList->getSlot($slot) === false) // item does not exist in database
+			if(!$item) // item does not exist in database
 			{
 				$main_content .= '<TD style="background-color: '.$config['site']['darkborder'].';"><img src="' . $config['site']['item_images_url'] . $slot . $config['site']['item_images_extension'] . '" width="45"/></TD>';
 			}
 			else
 			{
-				$main_content .= '<TD style="background-color: '.$config['site']['darkborder'].';"><img src="' . $config['site']['item_images_url'] . $itemsList->getSlot($slot)->getID() . $config['site']['item_images_extension'] . '" width="45"/></TD>';
+				$item_id = $item[array_keys($item)[0]]->getId();
+				$main_content .= '<TD style="background-color: '.$config['site']['darkborder'].';"><img src="' . $config['site']['item_images_url'] . $item_id . $config['site']['item_images_extension'] . '" width="45"/></TD>';
 			}
 			if($number_of_items_showed % 3 == 2)
 			{

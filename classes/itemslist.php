@@ -8,28 +8,22 @@ class ItemsList extends DatabaseList
 
     public function __construct($player_id = 0)
     {
-		parent::__construct('Item');
+		parent::__construct('ItemBinary');
 		if($player_id != 0)
 		{
-			$this->setFilter(new SQL_Filter(new SQL_Field('player_id', 'player_items'), SQL_Filter::EQUAL, $player_id));
+			$this->setFilter(new SQL_Filter(new SQL_Field('player_id', 'player_bin_data'), SQL_Filter::EQUAL, $player_id));
 			$this->setPlayerId($player_id);
 		}
     }
 
 	public function load()
 	{
-		$this->setClass('Item');
+		$this->setClass('ItemBinary');
 		parent::load();
 		if(count($this->data) > 0)
 		{
-			$_new_items = array();
-			$_new_data = array();
-			foreach($this->data as $i => $item)
-			{
-				$_new_items[$i] = new Item($item);
-				$_new_data[] = &$_new_items[$i];
-			}
-			$this->data = $_new_data;
+			$items = new ItemBinary($this->data[0]);
+			$this->data = $items;
 		}
 	}
 
@@ -40,7 +34,7 @@ class ItemsList extends DatabaseList
 		if($this->player_id != 0)
 		{
 			if($deleteCurrentItems)
-				$this->getDatabaseHandler()->query('DELETE FROM ' . $this->getDatabaseHandler()->tableName('player_items') . ' WHERE ' . $this->getDatabaseHandler()->fieldName('player_id') . ' = ' . $this->getDatabaseHandler()->quote($this->getPlayerId()));
+				$this->getDatabaseHandler()->query('DELETE FROM ' . $this->getDatabaseHandler()->tableName('player_bin_data') . ' WHERE ' . $this->getDatabaseHandler()->fieldName('player_id') . ' = ' . $this->getDatabaseHandler()->quote($this->getPlayerId()));
 
 			if(count($this->data) > 0)
 			{
@@ -48,7 +42,7 @@ class ItemsList extends DatabaseList
 				foreach($this->fields as $key)
 					$keys[] = $this->getDatabaseHandler()->fieldName($key);
 
-				$query = 'INSERT INTO ' . $this->getDatabaseHandler()->tableName('player_items') . ' (' . implode(', ', $keys) . ') VALUES ';
+				$query = 'INSERT INTO ' . $this->getDatabaseHandler()->tableName('player_bin_data') . ' (' . implode(', ', $keys) . ') VALUES ';
 				$items = array();
 				foreach($this->data as $item)
 				{
@@ -77,24 +71,14 @@ class ItemsList extends DatabaseList
 		return $this->player_id;
 	}
 
-	public function getSlot($slot)
+	public function getItemInventory($pid, $sid = NULL)
 	{
 		if(!isset($this->data))
 			$this->load();
-		foreach($this->data as $i => $item)
-			if($item->getPID() == $slot)
-				return $item;
-
-		return false;
-	}
-
-	public function getItem($pid, $sid = null)
-	{
-		if(!isset($this->data))
-			$this->load();
+		$inventory = $this->data->getInventory();
 		if($sid != null)
 		{
-			foreach($this->data as $item)
+			foreach ($inventory as $item)
 				if($item->getPID() == $pid && $item->getSID() == $sid)
 					return $item;
 			return false;
@@ -102,10 +86,38 @@ class ItemsList extends DatabaseList
 		else
 		{
 			$items = array();
-			foreach($this->data as $item)
+			foreach ($inventory as $item)
 				if($item->getPID() == $pid)
 					$items[$item->getSID()] = $item;
 			return $items;
 		}
+	}
+
+	public function getInventoryItems()
+	{
+		if (!isset($this->data)) 
+			$this->load();
+		return $this->data->getInventory();
+	}
+
+	public function getDepotItems()
+	{
+		if (!isset($this->data)) 
+			$this->load();
+		return $this->data->getDepot();
+	}
+
+	public function getStashItems()
+	{
+		if (!isset($this->data)) 
+			$this->load();
+		return $this->data->getStash();
+	}
+
+	public function getInboxItems()
+	{
+		if (!isset($this->data)) 
+			$this->load();
+		return $this->data->getInbox();
 	}
 }
